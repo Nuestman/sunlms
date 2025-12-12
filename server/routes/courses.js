@@ -153,13 +153,18 @@ router.post('/:id/publish', asyncHandler(async (req, res) => {
   const course = await coursesService.publishCourse(req.params.id, req.user);
   
   // Create notification for course publishing
-  await createNotification(req.user.id, {
-    type: 'success',
-    title: 'Course Published',
-    message: `Course "${course.title}" has been published and is now available to students.`,
-    link: `/courses/${course.id}`,
-    data: { courseId: course.id, courseTitle: course.title }
-  }, io);
+  try {
+    await createNotification(req.user.id, {
+      type: 'success',
+      title: 'Course Published',
+      message: `Course "${course.title}" has been published and is now available to students.`,
+      link: `/courses/${course.id}`,
+      data: { courseId: course.id, courseTitle: course.title }
+    });
+  } catch (notificationError) {
+    console.error('Failed to create notification:', notificationError);
+    // Don't fail the publish if notification fails
+  }
   
   res.json({
     success: true,
